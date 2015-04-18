@@ -1,34 +1,29 @@
 package io.cafebabe.util.i18n
 
 import java.util.Locale
-import java.util.regex.Pattern
 
 /**
- * Locale factory.
+ * Locale parser.
  *
  * @author Vladimir Konstantinov
  * @version 1.0 (4/9/15)
  */
 object Locales {
 
-  val Regex = Pattern.compile("(?<lang>[a-zA-Z]{2})(_(?<country>[a-zA-Z]{2}))?")
+    private val Pattern = """^([a-zA-Z]{1,8})(?:[_-]([a-zA-Z]{1,8}))?""".r.unanchored
 
   /**
    * Parses locale string to produce instance of [[java.util.Locale Locale]].
+   * <p>Locale string should match the following pattern:
+   * {{{
+   *   ^([a-zA-Z]{1,8})(?:[_-]([a-zA-Z]{1,8}))?
+   * }}}
    *
    * @param locale String representation of locale.
-   * @return New instance of Locale or default Locale if string is null or is not matched by pattern.
+   * @return New instance of Locale or default Locale if string is null or is not matched by any pattern.
    */
-  def apply(locale: String): Locale = {
-    if (locale != null) {
-      val matcher = Regex.matcher(locale)
-      matcher.find() match {
-        case true =>
-          val lang = matcher.group("lang")
-          val country = Option(matcher.group("country")).getOrElse("")
-          new Locale(lang, country)
-        case _ => Locale.getDefault
-      }
-    } else Locale.getDefault
+  def parse(locale: String): Locale = locale match {
+    case Pattern(language, country) => new Locale(language, Option(country).getOrElse(""))
+    case _ => Locale.getDefault
   }
 }
