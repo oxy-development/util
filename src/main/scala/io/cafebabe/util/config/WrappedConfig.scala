@@ -3,40 +3,69 @@ package io.cafebabe.util.config
 import com.typesafe.config._
 
 import scala.collection.JavaConversions._
-import scala.concurrent.duration.{FiniteDuration, Duration}
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.util.concurrent.TimeUnit
 
 /**
  * @author Vladimir Konstantinov
+ * @author Yuriy Gintsyak
  * @version 1.0 (6/10/2015)
  */
 class WrappedConfig(config: Config) {
-  def findBoolean(path: String): Option[Boolean] = if (config.hasPath(path)) Some(config.getBoolean(path)) else None
-  def findNumber(path: String): Option[Number] = if (config.hasPath(path)) Some(config.getNumber(path)) else None
-  def findInt(path: String): Option[Int] = if (config.hasPath(path)) Some(config.getInt(path)) else None
-  def findLong(path: String): Option[Long] = if (config.hasPath(path)) Some(config.getLong(path)) else None
-  def findDouble(path: String): Option[Double] = if (config.hasPath(path)) Some(config.getDouble(path)) else None
-  def findString(path: String): Option[String] = if (config.hasPath(path)) Some(config.getString(path)) else None
-  def findObject(path: String): Option[ConfigObject] = if (config.hasPath(path)) Some(config.getObject(path)) else None
-  def findConfig(path: String): Option[Config] = if (config.hasPath(path)) Some(config.getConfig(path)) else None
-  def findValue(path: String): Option[ConfigValue] = if (config.hasPath(path)) Some(config.getValue(path)) else None
-  def findBytes(path: String): Option[Long] = if (config.hasPath(path)) Some(config.getBytes(path)) else None
-  def findMemorySize(path: String): Option[ConfigMemorySize] = if (config.hasPath(path)) Some(config.getMemorySize(path)) else None
-  def findDuration(path: String): Option[Duration] = if (config.hasPath(path)) Some(Duration(config.getString(path))) else None
-  def findList(path: String): Option[ConfigList] = if (config.hasPath(path)) Some(config.getList(path)) else None
-  def findBooleanList(path: String): Option[List[Boolean]] = if (config.hasPath(path)) Some(config.getBooleanList(path).map(_.booleanValue).toList) else None
-  def findNumberList(path: String): Option[List[Number]] = if (config.hasPath(path)) Some(config.getNumberList(path).toList) else None
-  def findIntList(path: String): Option[List[Int]] = if (config.hasPath(path)) Some(config.getIntList(path).map(_.intValue).toList) else None
-  def findLongList(path: String): Option[List[Long]] = if (config.hasPath(path)) Some(config.getLongList(path).map(_.longValue).toList) else None
-  def findDoubleList(path: String): Option[List[Double]] = if (config.hasPath(path)) Some(config.getDoubleList(path).map(_.doubleValue).toList) else None
-  def findStringList(path: String): Option[List[String]] = if (config.hasPath(path)) Some(config.getStringList(path).toList) else None
-  def findObjectList(path: String): Option[List[ConfigObject]] = if (config.hasPath(path)) Some(config.getObjectList(path).toList) else None
-  def findConfigList(path: String): Option[List[Config]] = if (config.hasPath(path)) Some(config.getConfigList(path).toList) else None
-  def findBytesList(path: String): Option[List[Long]] = if (config.hasPath(path)) Some(config.getBytesList(path).map(_.longValue).toList) else None
-  def findMemorySizeList(path: String): Option[List[ConfigMemorySize]] = if (config.hasPath(path)) Some(config.getMemorySizeList(path).toList) else None
-  def findDurationList(path: String): Option[List[Duration]] = if (config.hasPath(path)) Some(config.getStringList(path).map(Duration.apply).toList) else None
 
-  def findFiniteDuration(path: String): Option[FiniteDuration] =
-    if (config.hasPath(path)) Some(FiniteDuration(config.getDuration(path, TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS))
+  // Internal
+  @inline
+  private [this] def lookupValue[V](path:String, f:(String)=>V):Option[V] = {
+    if (config.hasPath(path)) Option(f(path))
     else None
+  }
+
+  @inline
+  private [this] def lookupIterable[V](path:String, f:(String) => java.util.List[V]):Iterable[V] = {
+
+    lookupValue(path, f) match {
+      case Some(x) => x.toIterable
+      case None => Iterable.empty
+    }
+  }
+
+  // Value retrieval
+  def findBoolean(path: String):Option[Boolean] = lookupValue(path, config.getBoolean)
+  def findNumber(path: String): Option[Number] = lookupValue(path, config.getNumber)
+  def findInt(path: String): Option[Int] = lookupValue(path, config.getInt)
+  def findLong(path: String): Option[Long] = lookupValue(path, config.getLong)
+  def findDouble(path: String): Option[Double] = lookupValue(path, config.getDouble)
+  def findString(path: String): Option[String] = lookupValue(path, config.getString)
+  def findObject(path: String): Option[ConfigObject] = lookupValue(path, config.getObject)
+  def findConfig(path: String): Option[Config] = lookupValue(path, config.getConfig)
+  def findValue(path: String): Option[ConfigValue] = lookupValue(path, config.getValue)
+  def findBytes(path: String): Option[Long] = lookupValue(path, config.getBytes) // ?? o_O
+  def findMemorySize(path: String): Option[ConfigMemorySize] = lookupValue(path, config.getMemorySize)
+
+  def findDuration(path: String): Option[Duration] = findString(path).map(Duration(_))
+  def findFiniteDuration(path: String): Option[FiniteDuration] =
+    findDuration(path).map(duration => FiniteDuration(duration.toNanos, TimeUnit.NANOSECONDS))
+
+  // Collection retrieval
+  def findList(path: String): Option[ConfigList] = lookupValue(path, config.getList)
+  def findBooleanList(path: String): Iterable[Boolean] = lookupIterable(path, config.getBooleanList).map(_.booleanValue())
+  def findNumberList(path: String): Iterable[Number] = lookupIterable(path, config.getNumberList)
+  def findIntList(path: String): Iterable[Int] = lookupIterable(path, config.getIntList).map(_.intValue())
+  def findLongList(path: String): Iterable[Long] = lookupIterable(path, config.getLongList).map(_.longValue)
+  def findDoubleList(path: String): Iterable[Double] = lookupIterable(path, config.getDoubleList).map(_.doubleValue)
+  def findStringList(path: String): Iterable[String] = lookupIterable(path, config.getStringList)
+
+  def findObjectList(path: String): Iterable[_ <: ConfigObject] =  lookupValue(path, config.getObjectList) match {
+    case Some(x) => x.toIterable
+    case None => Iterable.empty
+  }
+
+  def findConfigList(path: String): Iterable[_ <: Config] = lookupValue(path, config.getConfigList) match {
+    case Some(x) => x.toIterable
+    case None => Iterable.empty
+  }
+
+  def findBytesList(path: String): Iterable[Long] = lookupIterable(path, config.getBytesList).map(_.longValue)
+  def findMemorySizeList(path: String): Iterable[ConfigMemorySize] = lookupIterable(path, config.getMemorySizeList)
+  def findDurationList(path: String): Iterable[Duration] = findStringList(path).map(Duration.apply)
 }
