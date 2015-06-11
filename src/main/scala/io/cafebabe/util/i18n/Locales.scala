@@ -3,14 +3,14 @@ package io.cafebabe.util.i18n
 import java.util.Locale
 
 /**
- * Locale parser.
+ * Locale utilities.
  *
  * @author Vladimir Konstantinov
  * @version 1.0 (4/9/15)
  */
 object Locales {
 
-    private val Pattern = """^([a-zA-Z]{1,8})(?:[_-]([a-zA-Z]{1,8}))?""".r.unanchored
+  private val Pattern = """^([a-zA-Z]{1,8})(?:[_-]([a-zA-Z]{1,8}))?""".r.unanchored
 
   /**
    * Parses locale string to produce instance of [[java.util.Locale Locale]].
