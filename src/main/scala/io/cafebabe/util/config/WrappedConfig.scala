@@ -1,10 +1,28 @@
+/*
+ * Copyright (C) 2015  Vladimir Konstantinov, Yuriy Gintsyak
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package io.cafebabe.util.config
 
 import com.typesafe.config._
 
+import java.util
+import java.util.concurrent.TimeUnit
+
 import scala.collection.JavaConversions._
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Vladimir Konstantinov
@@ -15,19 +33,15 @@ class WrappedConfig(config: Config) {
 
   // Internal
   @inline
-  private [this] def lookupValue[V](path:String, f:(String)=>V):Option[V] = {
-    if (config.hasPath(path)) Option(f(path))
-    else None
-  }
+  private [this] def lookupValue[V](path: String, f: (String) => V): Option[V] =
+    if (config.hasPath(path)) Option(f(path)) else None
 
   @inline
-  private [this] def lookupIterable[V](path:String, f:(String) => java.util.List[V]):Iterable[V] = {
-
+  private [this] def lookupIterable[V](path: String, f: (String) => util.List[V]): Iterable[V] =
     lookupValue(path, f) match {
       case Some(x) => x.toIterable
       case None => Iterable.empty
     }
-  }
 
   // Value retrieval
   def findBoolean(path: String):Option[Boolean] = lookupValue(path, config.getBoolean)
@@ -39,10 +53,10 @@ class WrappedConfig(config: Config) {
   def findObject(path: String): Option[ConfigObject] = lookupValue(path, config.getObject)
   def findConfig(path: String): Option[Config] = lookupValue(path, config.getConfig)
   def findValue(path: String): Option[ConfigValue] = lookupValue(path, config.getValue)
-  def findBytes(path: String): Option[Long] = lookupValue(path, config.getBytes) // ?? o_O
+  def findBytes(path: String): Option[Long] = lookupValue(path, config.getBytes)
   def findMemorySize(path: String): Option[ConfigMemorySize] = lookupValue(path, config.getMemorySize)
 
-  def findDuration(path: String): Option[Duration] = findString(path).map(Duration(_))
+  def findDuration(path: String): Option[Duration] = findString(path).map(Duration.apply)
   def findFiniteDuration(path: String): Option[FiniteDuration] =
     findDuration(path).map(duration => FiniteDuration(duration.toNanos, TimeUnit.NANOSECONDS))
 
@@ -55,7 +69,7 @@ class WrappedConfig(config: Config) {
   def findDoubleList(path: String): Iterable[Double] = lookupIterable(path, config.getDoubleList).map(_.doubleValue)
   def findStringList(path: String): Iterable[String] = lookupIterable(path, config.getStringList)
 
-  def findObjectList(path: String): Iterable[_ <: ConfigObject] =  lookupValue(path, config.getObjectList) match {
+  def findObjectList(path: String): Iterable[_ <: ConfigObject] = lookupValue(path, config.getObjectList) match {
     case Some(x) => x.toIterable
     case None => Iterable.empty
   }
@@ -68,4 +82,6 @@ class WrappedConfig(config: Config) {
   def findBytesList(path: String): Iterable[Long] = lookupIterable(path, config.getBytesList).map(_.longValue)
   def findMemorySizeList(path: String): Iterable[ConfigMemorySize] = lookupIterable(path, config.getMemorySizeList)
   def findDurationList(path: String): Iterable[Duration] = findStringList(path).map(Duration.apply)
+  def findFiniteDurationList(path: String): Iterable[FiniteDuration] =
+    findDurationList(path).map(duration => FiniteDuration(duration.toNanos, TimeUnit.NANOSECONDS))
 }
