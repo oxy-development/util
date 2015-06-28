@@ -34,7 +34,7 @@ lazy val root = (project in file(".")).
 
     libraryDependencies ++= Seq(
       "org.json4s" %% "json4s-native" % "3.2.11" % "provided",
-      "com.typesafe" % "config" % "1.3.0" % "provided",
+      "com.typesafe" % "config" % "1.2.1" % "provided",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test"
     )
   )

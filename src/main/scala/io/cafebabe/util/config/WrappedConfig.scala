@@ -54,7 +54,6 @@ class WrappedConfig(config: Config) {
   def findConfig(path: String): Option[Config] = lookupValue(path, config.getConfig)
   def findValue(path: String): Option[ConfigValue] = lookupValue(path, config.getValue)
   def findBytes(path: String): Option[Long] = lookupValue(path, config.getBytes)
-  def findMemorySize(path: String): Option[ConfigMemorySize] = lookupValue(path, config.getMemorySize)
 
   def findDuration(path: String): Option[Duration] = findString(path).map(Duration.apply)
   def findFiniteDuration(path: String): Option[FiniteDuration] =
@@ -80,7 +79,6 @@ class WrappedConfig(config: Config) {
   }
 
   def findBytesList(path: String): Iterable[Long] = lookupIterable(path, config.getBytesList).map(_.longValue)
-  def findMemorySizeList(path: String): Iterable[ConfigMemorySize] = lookupIterable(path, config.getMemorySizeList)
   def findDurationList(path: String): Iterable[Duration] = findStringList(path).map(Duration.apply)
   def findFiniteDurationList(path: String): Iterable[FiniteDuration] =
     findDurationList(path).map(duration => FiniteDuration(duration.toNanos, TimeUnit.NANOSECONDS))
