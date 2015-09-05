@@ -25,7 +25,7 @@ lazy val root = (project in file(".")).
     name := "cafebabe-util",
     version := "0.0.1-SNAPSHOT",
 
-    scalaVersion := "2.11.6",
+    scalaVersion := "2.11.7",
 
     libraryDependencies ++= Seq(
       "org.json4s" %% "json4s-native" % "3.2.11" % "provided",
