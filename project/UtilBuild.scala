@@ -3,7 +3,7 @@ import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
 import sbt.Keys._
 import sbt._
 
-class UtilBuild extends Build {
+object UtilBuild extends Build {
 
   lazy val basicSettings = Seq(
     organization := "io.cafebabe",
